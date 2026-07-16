@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using UglyToad.PdfPig;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Tesseract;
 
 namespace ChatBotApi.Controllers
 {
@@ -16,8 +17,8 @@ namespace ChatBotApi.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("Không có file.");
 
-            if (file.Length > 1 * 1024 * 1024) 
-                return BadRequest("Chỉ hỗ trợ file .txt.");
+            if (file.Length > 10 * 1024 * 1024)  // 10MB
+                return BadRequest("File quá lớn, tối đa 10MB.");
 
             var ext = Path.GetExtension(file.FileName).ToLower();
 
@@ -28,18 +29,18 @@ namespace ChatBotApi.Controllers
             {
                 var content = ext switch
                 {
-                    ".txt"  => await ReadTxt(file),
-                    ".pdf"  => ReadPdf(file),
+                    ".txt" => await ReadTxt(file),
+                    ".pdf" => ReadPdf(file),
                     ".docx" => ReadDocx(file),
-                    _       => throw new Exception("Định dạng không hỗ trợ.")
+                    _ => throw new Exception("Định dạng không hỗ trợ.")
                 };
 
                 var fileType = ext switch
                 {
                     ".txt" => "TXT",
-                    "pdf"  => "PDF",
-                    "docx" => "Word",
-                    _      => ext.ToUpper()
+                    ".pdf" => "PDF",
+                    ".docx" => "Word",
+                    _ => ext.ToUpper()
                 };
 
                 if (string.IsNullOrWhiteSpace(content))
@@ -54,7 +55,8 @@ namespace ChatBotApi.Controllers
                     content,
                     size = file.Length
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest("Lỗi đọc file: " + ex.Message);
             }
@@ -72,22 +74,61 @@ namespace ChatBotApi.Controllers
         }
 
         // Đọc PDF bằng PdfPig
+        // Đọc PDF — thử extract text trước, nếu không có thì OCR từng trang
         private string ReadPdf(IFormFile file)
         {
             using var stream = file.OpenReadStream();
             using var ms = new MemoryStream();
             stream.CopyTo(ms);
+            var pdfBytes = ms.ToArray();
 
-            using var pdf = PdfDocument.Open(ms.ToArray());
+            using var pdf = PdfDocument.Open(pdfBytes);
 
-            var text = string.Join("\n\n", pdf.GetPages()
+            var pages = pdf.GetPages().ToList();
+
+            // Thử đọc text thuần trước
+            var textPages = pages
                 .Select(p => p.Text.Trim())
-                .Where(t => !string.IsNullOrWhiteSpace(t)));
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
 
-            if (string.IsNullOrWhiteSpace(text))
-                throw new Exception("PDF này là dạng scan/ảnh, không đọc được text.");
+            if (textPages.Count > 0)
+            {
+                // PDF có text → trả về luôn, không cần OCR
+                return string.Join("\n\n", textPages);
+            }
 
-            return text;
+            // PDF toàn ảnh → OCR từng trang bằng Tesseract
+            var tessDataPath = Path.Combine(Directory.GetCurrentDirectory(), "tessdata");
+            var results = new List<string>();
+
+            using var engine = new TesseractEngine(tessDataPath, "vie+eng", EngineMode.Default);
+
+            foreach (var page in pages)
+            {
+                // Render trang PDF thành ảnh bitmap
+                // PdfPig không tự render ảnh nên cần dùng PDFium hoặc lấy ảnh nhúng trực tiếp
+                var images = page.GetImages().ToList();
+
+                foreach (var img in images)
+                {
+                    try
+                    {
+                        using var imgMs = new MemoryStream(img.RawBytes.ToArray());
+                        using var pix = Pix.LoadFromMemory(imgMs.ToArray());
+                        using var ocrPage = engine.Process(pix);
+                        var ocrText = ocrPage.GetText().Trim();
+                        if (!string.IsNullOrWhiteSpace(ocrText))
+                            results.Add(ocrText);
+                    }
+                    catch { /* bỏ qua ảnh lỗi */ }
+                }
+            }
+
+            if (results.Count == 0)
+                throw new Exception("Không đọc được nội dung PDF — thử file khác.");
+
+            return string.Join("\n\n", results);
         }
 
         // Đọc Word (.docx) bằng OpenXml
