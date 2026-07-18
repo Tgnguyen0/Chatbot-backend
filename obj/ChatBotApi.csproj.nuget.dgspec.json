@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {}
+    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {}
   },
   "projects": {
-    "c:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {
+    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
+        "projectUniqueName": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
         "projectName": "ChatBotApi",
-        "projectPath": "c:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
+        "projectPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
         "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\obj\\",
+        "outputPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config"

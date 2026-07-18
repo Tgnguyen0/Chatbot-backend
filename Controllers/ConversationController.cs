@@ -35,7 +35,7 @@ public class ConversationController : ControllerBase
         return Ok(list);
     }
 
-    // GET /api/conversations/{id}/messages — load lịch sử tin nhắn
+    // GET /api/conversations/{id}/messages — load lịch sử trò chuyện
     [HttpGet("{id}/messages")]
     public async Task<IActionResult> GetMessages(int id)
     {

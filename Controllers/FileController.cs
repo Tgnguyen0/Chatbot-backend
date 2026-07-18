@@ -15,50 +15,42 @@ namespace ChatBotApi.Controllers
         public async Task<IActionResult> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Không có file.");
+                return BadRequest(new { error = "Không có file." });
 
-            if (file.Length > 10 * 1024 * 1024)  // 10MB
-                return BadRequest("File quá lớn, tối đa 10MB.");
+            if (file.Length > 10 * 1024 * 1024)
+                return BadRequest(new { error = "File quá lớn, tối đa 10MB." });
 
             var ext = Path.GetExtension(file.FileName).ToLower();
 
             if (ext is not (".txt" or ".pdf" or ".docx"))
-                return BadRequest("Chỉ hỗ trợ .txt, .pdf, .docx.");
+                return BadRequest(new { error = "Chỉ hỗ trợ .txt, .pdf, .docx." });
 
             try
             {
                 var content = ext switch
                 {
-                    ".txt" => await ReadTxt(file),
-                    ".pdf" => ReadPdf(file),
+                    ".txt"  => await ReadTxt(file),
+                    ".pdf"  => ReadPdf(file),
                     ".docx" => ReadDocx(file),
-                    _ => throw new Exception("Định dạng không hỗ trợ.")
+                    _       => throw new Exception("Định dạng không hỗ trợ.")
                 };
 
                 var fileType = ext switch
                 {
-                    ".txt" => "TXT",
-                    ".pdf" => "PDF",
+                    ".txt"  => "TXT",
+                    ".pdf"  => "PDF",
                     ".docx" => "Word",
-                    _ => ext.ToUpper()
+                    _       => ext.ToUpper()
                 };
 
                 if (string.IsNullOrWhiteSpace(content))
-                {
-                    return BadRequest("Không đọc được nội dung file.");
-                }
+                    return BadRequest(new { error = "Không đọc được nội dung file." });
 
-                return Ok(new
-                {
-                    fileName = file.FileName,
-                    fileType,
-                    content,
-                    size = file.Length
-                });
+                return Ok(new { fileName = file.FileName, fileType, content, size = file.Length });
             }
             catch (Exception ex)
             {
-                return BadRequest("Lỗi đọc file: " + ex.Message);
+                return BadRequest(new { error = "Lỗi đọc file: " + ex.Message });
             }
         }
 
@@ -131,7 +123,7 @@ namespace ChatBotApi.Controllers
             return string.Join("\n\n", results);
         }
 
-        // Đọc Word (.docx) bằng OpenXml
+        // Đọc Word (.docx) — lấy text + OCR ảnh nhúng
         private string ReadDocx(IFormFile file)
         {
             using var stream = file.OpenReadStream();
@@ -140,9 +132,46 @@ namespace ChatBotApi.Controllers
             var body = doc.MainDocumentPart?.Document?.Body
                 ?? throw new Exception("File Word không có nội dung.");
 
-            return string.Join("\n", body.Elements<Paragraph>()
+            var results = new List<string>();
+
+            // Đọc text thuần từ các đoạn văn
+            var textContent = string.Join("\n", body.Elements<Paragraph>()
                 .Select(p => p.InnerText)
                 .Where(t => !string.IsNullOrWhiteSpace(t)));
+
+            if (!string.IsNullOrWhiteSpace(textContent))
+                results.Add(textContent);
+
+            // OCR các ảnh nhúng trong file docx
+            var imageParts = doc.MainDocumentPart?.ImageParts?.ToList();
+            if (imageParts != null && imageParts.Count > 0)
+            {
+                var tessDataPath = Path.Combine(Directory.GetCurrentDirectory(), "tessdata");
+                using var engine = new TesseractEngine(tessDataPath, "vie+eng", EngineMode.Default);
+
+                foreach (var imagePart in imageParts)
+                {
+                    try
+                    {
+                        using var imgStream = imagePart.GetStream();
+                        using var imgMs = new MemoryStream();
+                        imgStream.CopyTo(imgMs);
+
+                        using var pix = Pix.LoadFromMemory(imgMs.ToArray());
+                        using var ocrPage = engine.Process(pix);
+                        var ocrText = ocrPage.GetText().Trim();
+
+                        if (!string.IsNullOrWhiteSpace(ocrText))
+                            results.Add($"[Nội dung ảnh trong tài liệu]\n{ocrText}");
+                    }
+                    catch { /* bỏ qua ảnh lỗi */ }
+                }
+            }
+
+            if (results.Count == 0)
+                throw new Exception("File Word không có nội dung.");
+
+            return string.Join("\n\n", results);
         }
     }
 }
