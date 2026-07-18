@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\Chatbot\\ChatBotApi\\ChatBotApi.csproj": {}
+    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\Chatbot\\ChatBotApi\\ChatBotApi.csproj": {
+    "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\Chatbot\\ChatBotApi\\ChatBotApi.csproj",
+        "projectUniqueName": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
         "projectName": "ChatBotApi",
-        "projectPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\Chatbot\\ChatBotApi\\ChatBotApi.csproj",
+        "projectPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\ChatBotApi.csproj",
         "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\Chatbot\\ChatBotApi\\obj\\",
+        "outputPath": "C:\\Users\\DELL\\Desktop\\Visual Studio Code\\C# Workspace\\ChatBotApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -43,6 +43,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "DocumentFormat.OpenXml": {
+              "target": "Package",
+              "version": "[3.5.1, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -55,6 +59,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "PdfPig": {
+              "target": "Package",
+              "version": "[0.1.15, )"
+            },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
               "version": "[8.0.0, )"
@@ -62,6 +70,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.4.0, )"
+            },
+            "Tesseract": {
+              "target": "Package",
+              "version": "[5.2.0, )"
             }
           },
           "imports": [
